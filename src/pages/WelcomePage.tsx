@@ -120,10 +120,6 @@ export function WelcomePage() {
 
           {/* Main Hero Section */}
           <div className="max-w-3xl space-y-4 py-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#E9E3F5] text-xs font-semibold text-[#124D52]">
-              <span>Tech4Bharat Hackathon · Problem Statement 8.1</span>
-            </div>
-
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#124D52] leading-tight text-balance">
               Empowering Women&apos;s Self-Help Groups Through Voice-First AI
             </h2>

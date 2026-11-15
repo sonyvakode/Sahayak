@@ -111,9 +111,6 @@ export function LoginPage() {
         {/* Left Context & Principles */}
         <section className="lg:col-span-5 space-y-6">
           <div className="space-y-3">
-            <p className="text-xs font-semibold tracking-wide text-[#8274A8]">
-              Tech4Bharat Hackathon · Problem Statement 8.1
-            </p>
             <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#124D52] leading-tight text-balance">
               Voice-First Operations &amp; Fair Payouts for Self-Help Groups
             </h1>

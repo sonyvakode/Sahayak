@@ -1,7 +1,5 @@
 # SahayakSHG — Voice-First AI Assistant for Indian Women's Self-Help Groups
 
-**Tech4Bharat Hackathon · Problem Statement 8.1 (Youth and Women Theme)**
-
 SahayakSHG is a mobile-first, voice-first, multi-agent full-stack web application that helps Indian women's Self-Help Groups (SHGs) record regional-language bulk orders, calculate fair selling prices deterministically, distribute work transparently, inspect quality, track delivery risks, and approve equitable member payouts with personal audio earnings playback.
 
 ---
