@@ -1,105 +1,211 @@
-# SahayakSHG — Voice-First AI Assistant for Indian Women's Self-Help Groups
+SahayakSHG
+Voice-First AI Assistant for Indian Women's Self-Help Groups
 
-SahayakSHG is a mobile-first, voice-first, multi-agent full-stack web application that helps Indian women's Self-Help Groups (SHGs) record regional-language bulk orders, calculate fair selling prices deterministically, distribute work transparently, inspect quality, track delivery risks, and approve equitable member payouts with personal audio earnings playback.
+SahayakSHG is a web application prototype designed to help Self-Help
+Group (SHG) leaders and members manage bulk orders, work allocation,
+production progress, quality inspection, and transparent member earnings
+through a simple, voice-first interface.
+Project overview
+The application demonstrates an end-to-end SHG order workflow:
+1. Voice Order Intake -- A leader records or enters a customer
+   order and reviews the product, quantity, and delivery deadline.
+2. Work Allocation -- The leader distributes the order among SHG
+   members and confirms that assigned quantities add up to the order
+   total.
+3. Order Progress & Quality -- Production is tracked separately
+   from quality acceptance. Completed, pending, accepted, and rework
+   quantities are shown distinctly.
+4. Payout Summary -- Earnings are calculated from accepted pieces
+   using a fixed rate per piece. The group reviews the payout before
+   approval.
+5. Member Audio Playback -- A member can review or listen to an
+   individual earnings summary in a selected language.
+The prototype also includes a welcome page and navigation between the
+individual application pages.
+Key features
+- Voice-first order entry with a manual-entry fallback.
+- Order transcription preview and editable order details.
+- Member work allocation with quantity validation.
+- Production progress tracking.
+- Quality inspection and rework tracking.
+- Transparent member-level and group-level payout calculations.
+- Regional-language options for Telugu, Hindi, and Kannada.
+- Individual audio earnings summary experience.
+- Separate leader and member experiences, where implemented.
+- Responsive layouts for desktop, tablet, and mobile.
+Demonstration data
+The following values are sample data for demonstrating the workflow.
+They are not real member records or actual payments.
 
----
+  Item                               Demonstration value
+  Order                                  500 cotton bags
+Members                                              4
+Initial allocation per member               125 pieces
+Completed production                        380 pieces
+Pending production                          120 pieces
+Accepted pieces                             360 pieces
+Pieces requiring rework                      20 pieces
+Rate per accepted piece                            ₹25
+Total group payout                              ₹9,000
+Meena Kumari's accepted pieces                      85
+Meena Kumari's sample earnings                  ₹2,125
+Payout calculation
+Member earnings = Accepted pieces × Rate per piece
 
-## Architecture Overview
+Group payout = Sum of all member earnings
 
-### 1. Frontend (`src/`)
-- **React 19 + TypeScript + Tailwind CSS v4 + React Router**
-- **Welcome & Persistent Navigation Layout (`WorkflowScreenLayout`)**:
-  - Default Home / Welcome Page (`/`) introducing SahayakSHG, four core capabilities, and workflow
-  - 5 Independent Full-Screen Workflow Pages: `/voice-intake`, `/work-allocation`, `/order-progress`, `/payout-summary`, `/member-audio`
-  - Support & Account Pages: `/help`, `/settings`, `/login`
-  - Full Leader & Member Portal Routes (`/leader/dashboard`, `/leader/orders`, `/leader/pricing`, `/leader/quality`, `/leader/consolidation`, `/leader/members`, `/member/dashboard`, `/member/work`, `/member/progress`, `/member/earnings`)
-- **Low-Literacy & Low-Connectivity Support**:
-  - Multilingual UI & voice support (`English`, `తెలుగు Telugu`, `हिन्दी Hindi`, `ಕನ್ನಡ Kannada`)
-  - Large >=44px touch targets, simple labeled icons, minimal typing
-  - Offline production update queue (`localStorage`) with automatic sync and visible status (`Saved Locally`, `Pending Sync`, `Synchronized`)
+For the demonstration order:
+- Anjali Devi: 95 × ₹25 = ₹2,375
+- Lakshmi N.: 90 × ₹25 = ₹2,250
+- Meena Kumari: 85 × ₹25 = ₹2,125
+- Rani Bai: 90 × ₹25 = ₹2,250
+Total: 360 accepted pieces and ₹9,000.
 
-### 2. Backend & Database (`server.ts`, `server/`)
-- **Express REST API + SQLite (`better-sqlite3`)** with clean relational schema structured for future PostgreSQL migration (`groups`, `users`, `members`, `products`, `orders`, `pricing_records`, `work_allocations`, `tasks`, `production_updates`, `quality_inspections`, `payouts`, `audio_summaries`, `activity_ledger`).
-- **Signed Session Auth & Strict Privacy RBAC (`server/middleware/auth.ts`)**:
-  - Leader-only endpoints protected by `requireLeader`.
-  - Member earnings and audio endpoints strictly scoped to `req.user.memberId`; cross-member earnings requests return `403 Forbidden`.
-- **Append-Only Activity Ledger**: Every order creation, pricing approval, work allocation, quality inspection, offline sync, consent change, and group payout approval is recorded immutably.
+Payout values should be treated as pending until group approval is
+completed. The prototype must not imply that money has been transferred
+unless a real payment integration confirms it.
+Application pages
+  Page                    Suggested route         Purpose
+  Welcome / Home          /                     Introduces SahayakSHG
+and starts the demo
 
-### 3. Multi-Agent AI & Speech Architecture (`server/agents/`, `server/services/`)
-- **Strict Separation of AI & Deterministic Math**:
-  - `server/services/deterministicMath.ts` handles **all** financial totals, cost breakdowns, unit prices, piece rates, fair allocation scoring, completion percentages, and payout math (`acceptedPieces × ratePerPiece`).
-  - **5 Modular Agents** (designed for future Lyzr orchestration via `server/agents/orchestrator.ts`):
-    1. **Intake Agent (`intakeAgent.ts`)**: Uses `gemini-4-hydrogen` structured JSON extraction (with deterministic fallback parser) to convert regional voice transcripts into product, quantity, and deadline.
-    2. **Pricing Agent (`pricingAgent.ts`)**: Computes deterministic prices and generates plain-language cost fairness explanations.
-    3. **Allocation Agent (`allocationAgent.ts`)**: Scores members by capacity, skills, past workload, and availability, and generates transparent explanations for human review.
-    4. **Tracking & Quality Agent (`trackingQualityAgent.ts`)**: Flags behind-schedule members and proposes leader-approved redistributions.
-    5. **Payout Agent (`payoutAgent.ts`)**: Calculates payouts deterministically and prepares regional audio summaries.
-- **Modular Speech Interfaces (`server/services/speechInterface.ts`)**:
-  - `SpeechToTextProvider` (`gemini-3.5-transcribe` + Bhashini ULCA / Whisper adapter hooks + Demo Transcription fallback).
-  - `TextToSpeechProvider` (`gemini-3.8-flash-lite-tts` WAV output + Browser Speech Synthesis & readable script fallback).
+  Voice Order Intake      /voice-intake         Creates and confirms an
+order
 
----
+  Work Allocation         /work-allocation      Assigns work to members
 
-## Local Setup Instructions
+  Order Progress &        /order-progress       Tracks production and
+Quality                                         inspection
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+  Payout Summary          /payout-summary       Calculates and approves
+earnings
+Member Audio Playback   /member-audio         Presents a member's
+individual earnings
+summary
+The exact routes may differ depending on the implementation generated in
+Google AI Studio. Update this table if the project uses different paths.
+Technology
+The intended frontend stack is:
+- React
+- TypeScript
+- Tailwind CSS
+Potential integrations include Google Gemini for language understanding,
+speech-to-text for voice order intake, text-to-speech for spoken
+earnings summaries, and Firebase or another backend for authentication
+and persistent data.
 
-2. **Configure environment variables**:
-   Copy `.env.example` to `.env` and set your keys if available:
-   ```bash
-   cp .env.example .env
-   ```
-   - `GEMINI_API_KEY`: Optional for demo mode; required on the server for live Gemini extraction, explanations, transcription, and TTS.
-   - `BHASHINI_API_KEY` / `LYZR_API_KEY`: Optional adapters for external Indian speech and Lyzr orchestration. When unset, clearly labeled **Demo Mode** fallbacks remain fully functional.
+Important: Only describe an integration as active if it has actually
+been configured and tested. Demo or simulated functionality should be
+identified clearly.
+Getting started
+The commands below are typical for a React and TypeScript project. Check
+the generated project's package.json and use its scripts if they
+differ.
+Prerequisites
+- Node.js (LTS version recommended)
+- npm
+- A code editor such as Visual Studio Code
+Install dependencies
+npm install
+Configure environment variables
+If the project requires API keys or service configuration, create a
+.env.local file in the project root and add only the variables
+required by the implementation.
 
-3. **Run the development server**:
-   ```bash
-   npm run dev
-   ```
-   The app and API run together on `http://localhost:3000`.
+Example format:
+# Add only variables actually used by this project.
+# Example:
+# VITE_GEMINI_API_KEY=your_api_key_here
+Do not commit API keys, passwords, service account files, or other
+secrets to GitHub. Do not expose private credentials in frontend code.
+For production use, route secret-bearing requests through a secure
+backend.
+Run the development server
+npm run dev
+Open the local URL printed in the terminal (commonly
+http://localhost:5173 for Vite projects).
+Create a production build
+npm run build
+If the project provides a preview script, test the production build
+with:
+npm run preview
+Deployment
+SahayakSHG can be deployed to a hosting platform such as Vercel after
+confirming that the project builds successfully.
 
-4. **Build & run in production**:
-   ```bash
-   npm run build
-   NODE_ENV=production npm start
-   ```
+Typical deployment steps:
+1. Push the project source code to a Git repository.
+2. Import the repository into Vercel.
+3. Set the framework preset and build settings according to the
+   project's actual configuration.
+4. Add required environment variables in the hosting platform's project
+   settings.
+5. Deploy and test all application routes.
+6. Confirm that direct navigation and page refreshes work for each
+   route.
+Suggested Vercel project name: sahayakshg.
 
----
-
-## Testing Guide (End-to-End Hackathon Demo)
-
-### Pre-Seeded Demo Scenario (`ORD-2026-0012`)
-- **Order**: `ORD-2026-0012` — `500 Cotton Bags`, `20-day deadline`
-- **Members & Initial Allocation**: Anjali Devi (`125`), Lakshmi N. (`125`), Meena Kumari (`125`), Rani Bai (`125`)
-- **Production**: `100 + 95 + 90 + 95 = 380 completed` (`120 pending`, `76%` completion)
-- **Quality**: `360 accepted`, `20 rework`
-- **Payout (`₹25/piece`)**:
-  - Anjali Devi: `95 × ₹25 = ₹2,375`
-  - Lakshmi N.: `90 × ₹25 = ₹2,250`
-  - Meena Kumari: `85 × ₹25 = ₹2,125`
-  - Rani Bai: `90 × ₹25 = ₹2,250`
-  - **Total Accepted**: `360` · **Total Group Payout**: `₹9,000`
-
-### Suggested Verification Steps
-1. **Welcome & Home (`/`)**: Start at `/`, verify the hero, 4 capability cards, and workflow chain, and click **Get Started** or **Explore Demo**.
-2. **Voice Intake (`/voice-intake`)**: Test Telugu/Hindi/Kannada/English samples or mic recording, extract order details, edit fields, and click **Confirm Order**.
-3. **Work Allocation (`/work-allocation`)**: Review the `500 Cotton Bags` equal split (`125` each), test **Edit Allocation** and **Reset Allocation**, and click **Approve Allocation**.
-4. **Order Progress & Quality (`/order-progress`)**: Inspect `380 completed`, `120 pending` (`76%`), `360 accepted`, and `20 needs rework`, and test updating completed or quality counts.
-5. **Payout Summary (`/payout-summary`)**: Click **Review Payout** to verify `₹9,000` (`2,375 + 2,250 + 2,125 + 2,250`) and test **Approve Group Payout**.
-6. **Member Audio Playback (`/member-audio`)**: Verify Meena Kumari's private earnings (`85` accepted × `₹25` = `₹2,125`), test **Play**, **Pause**, **Replay**, progress bar, and regional languages (`te`, `hi`, `kn`, `en`).
-7. **Offline Queue & Help (`/settings`, `/help`)**: Toggle **Simulate Offline Mode** in `/settings` and verify queued sync behavior and audit ledger entries.
-
----
-
-## Deployment Instructions
-- **Vercel Deployment (Included `vercel.json` + `api/index.ts`)**:
-  - `vercel.json` builds the Vite SPA into `dist/`, routes all `/api/*` requests to the Express serverless handler `api/index.ts`, and rewrites all React Router client routes (`/`, `/voice-intake`, `/work-allocation`, `/order-progress`, `/payout-summary`, `/member-audio`, `/help`, `/settings`, `/login`, `/leader/*`, `/member/*`) to `index.html`.
-  - Set `GEMINI_API_KEY` and a strong `SESSION_SECRET` in Vercel Environment Variables. In serverless mode, SQLite automatically initializes in `/tmp/sahayakshg.db` (ephemeral demo persistence) unless `SQLITE_DB_PATH` or an external database is configured.
-- **Node / Cloud Run Deployment (`server.ts`)**:
-  - Ensure `NODE_ENV=production`, `GEMINI_API_KEY`, and a strong `SESSION_SECRET` are set in your host environment.
-  - Run `npm run build` to bundle the React client into `dist/`.
-  - Start the server with `npm start` (`node server.ts` on Node 22+ or `tsx server.ts`).
-  - Mount a persistent volume for `SQLITE_DB_PATH` or connect PostgreSQL via `DATABASE_URL` when scaling beyond the prototype.
+The displayed application brand should remain SahayakSHG, even
+though the deployment project identifier is lowercase.
+Accessibility and user experience
+The interface is intended for SHG users with different levels of digital
+literacy. Design priorities include:
+- Large, clearly labeled touch targets.
+- Simple navigation and familiar icons.
+- Readable text and strong color contrast.
+- Short instructions and clear status messages.
+- Regional-language options.
+- Audio support with a text alternative.
+- Manual alternatives when voice services are unavailable.
+Data, privacy, and safety
+- Use sample data for demonstrations unless real data has been
+  collected with appropriate consent.
+- Do not expose one member's private earnings information to another
+  member.
+- Protect authentication credentials and API keys.
+- Obtain consent before recording or processing voice data.
+- Clearly distinguish AI-generated suggestions from leader-approved
+  decisions.
+- Keep payout calculations deterministic and auditable.
+- Require group approval before marking a payout as approved.
+- Do not claim that a payment has been made without confirmation from
+  a payment provider.
+Current prototype limitations
+Before presenting or deploying the application, verify which
+capabilities are genuinely connected. Depending on the implementation,
+the following may be demo-only:
+- Live speech recognition.
+- Regional-language speech transcription.
+- Text-to-speech playback.
+- Persistent database storage.
+- User authentication and role permissions.
+- Real-time synchronization between devices.
+- Actual payment processing.
+A simulated feature should be labeled as a demo and must not be
+presented as a completed external integration.
+Testing checklist
+- [ ] The welcome page opens correctly.
+- [ ] Each of the five application pages can be opened independently.
+- [ ] Navigation works between all pages.
+- [ ] The application shows one full page at a time, not a collage.
+- [ ] The order quantity is 500 pieces.
+- [ ] Initial allocation totals 500 pieces.
+- [ ] Production totals 380 completed and 120 pending pieces.
+- [ ] Quality totals 360 accepted and 20 requiring rework.
+- [ ] Individual payouts add up to ₹9,000.
+- [ ] Meena Kumari's sample earnings equal ₹2,125.
+- [ ] Payout approval is distinct from payment transfer.
+- [ ] Voice and audio controls behave as documented.
+- [ ] Demo-only features are labeled clearly.
+- [ ] Layouts work on desktop and mobile.
+- [ ] No API keys or private credentials are committed.
+- [ ] No broken links, images, or console errors remain.
+Project purpose
+SahayakSHG aims to make SHG order management easier to understand and
+coordinate. By combining voice-first interaction, transparent work
+allocation, production visibility, and clear earnings records, the
+prototype demonstrates how accessible digital tools can support women's
+Self-Help Groups.
+Project: SahayakSHG
+Category: Voice-first AI assistant for Self-Help Groups
+Project status: Hackathon prototype
