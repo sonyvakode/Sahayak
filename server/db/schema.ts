@@ -1,11 +1,22 @@
 import Database from 'better-sqlite3';
+import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const dbPath = process.env.SQLITE_DB_PATH || path.resolve(process.cwd(), 'sahayakshg.db');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const defaultDbPath = isServerless
+  ? path.join('/tmp', 'sahayakshg.db')
+  : path.resolve(process.cwd(), 'sahayakshg.db');
+const dbPath = process.env.SQLITE_DB_PATH || defaultDbPath;
+
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 export const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
+try {
+  db.pragma('journal_mode = WAL');
+} catch {
+  db.pragma('journal_mode = DELETE');
+}
 db.pragma('foreign_keys = ON');
 
 export interface ActivityLedgerInput {
@@ -228,6 +239,18 @@ export function initializeDatabase(): void {
   `);
 
   seedDemoDataIfEmpty();
+
+  // Ensure existing databases serve product/QC sample images from public /images/ in production builds
+  db.prepare(`
+    UPDATE products
+    SET sample_image_url = REPLACE(sample_image_url, '/src/assets/images/', '/images/')
+    WHERE sample_image_url LIKE '/src/assets/images/%'
+  `).run();
+  db.prepare(`
+    UPDATE quality_inspections
+    SET sample_photo_url = REPLACE(sample_photo_url, '/src/assets/images/', '/images/')
+    WHERE sample_photo_url LIKE '/src/assets/images/%'
+  `).run();
 }
 
 function hashPin(pin: string): string {
@@ -332,8 +355,8 @@ function seedDemoDataIfEmpty(): void {
     db.prepare(`
       INSERT INTO products (id, name, unit, default_labor_hours, description, sample_image_url)
       VALUES
-        ('PRD-01', 'Cotton Bags', 'bags', 0.35, 'Natural unbleached 12oz cotton tote bags with reinforced cross-stitch handles', '/src/assets/images/cotton_bag_sample_1794753304422.jpg'),
-        ('PRD-02', 'Handwoven Jute Pouches', 'pouches', 0.3, 'Eco-friendly drawstring jute gift pouches with double lock seam', '/src/assets/images/jute_pouch_sample_1794753305911.jpg')
+        ('PRD-01', 'Cotton Bags', 'bags', 0.35, 'Natural unbleached 12oz cotton tote bags with reinforced cross-stitch handles', '/images/cotton_bag_sample_1794753304422.jpg'),
+        ('PRD-02', 'Handwoven Jute Pouches', 'pouches', 0.3, 'Eco-friendly drawstring jute gift pouches with double lock seam', '/images/jute_pouch_sample_1794753305911.jpg')
     `).run();
 
     // 5. Orders — Flagship Demo Order ORD-2026-0012 + Supporting Orders
@@ -470,7 +493,7 @@ function seedDemoDataIfEmpty(): void {
         INSERT INTO quality_inspections (
           id, order_id, allocation_id, member_id, inspected_qty, accepted_qty,
           rework_qty, notes, sample_photo_url, decision_by, decided_at
-        ) VALUES (?, 'ORD-2026-0012', ?, ?, ?, ?, ?, ?, '/src/assets/images/cotton_bag_sample_1794753304422.jpg', 'USR-LEADER-01', ?)
+        ) VALUES (?, 'ORD-2026-0012', ?, ?, ?, ?, ?, ?, '/images/cotton_bag_sample_1794753304422.jpg', 'USR-LEADER-01', ?)
       `).run(q.id, q.allocId, q.memberId, q.inspected, q.accepted, q.rework, q.note, now);
     }
 

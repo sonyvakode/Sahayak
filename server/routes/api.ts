@@ -85,10 +85,12 @@ apiRouter.post('/auth/login', (req, res) => {
     return;
   }
 
+  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
   const token = signSessionToken(row.id);
   res.cookie(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: isHttps ? 'none' : 'lax',
+    secure: isHttps,
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -108,8 +110,13 @@ apiRouter.post('/auth/login', (req, res) => {
   });
 });
 
-apiRouter.post('/auth/logout', (_req, res) => {
-  res.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
+apiRouter.post('/auth/logout', (req, res) => {
+  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  res.clearCookie(SESSION_COOKIE_NAME, {
+    path: '/',
+    sameSite: isHttps ? 'none' : 'lax',
+    secure: isHttps,
+  });
   res.json({ ok: true });
 });
 

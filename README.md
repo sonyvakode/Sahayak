@@ -97,7 +97,11 @@ SahayakSHG is a mobile-first, voice-first, multi-agent full-stack web applicatio
 ---
 
 ## Deployment Instructions
-- Ensure `NODE_ENV=production`, `GEMINI_API_KEY`, and a strong `SESSION_SECRET` are set in your host environment.
-- Run `npm run build` to bundle the React client into `dist/`.
-- Start the server with `npm start` (`node server.ts` on Node 22+ or `tsx server.ts`).
-- Mount a persistent volume for `SQLITE_DB_PATH` or connect PostgreSQL via `DATABASE_URL` when scaling beyond the prototype.
+- **Vercel Deployment (Included `vercel.json` + `api/index.ts`)**:
+  - `vercel.json` builds the Vite SPA into `dist/`, routes all `/api/*` requests to the Express serverless handler `api/index.ts`, and rewrites all React Router client routes (`/`, `/voice-intake`, `/work-allocation`, `/order-progress`, `/payout-summary`, `/member-audio`, `/help`, `/settings`, `/login`, `/leader/*`, `/member/*`) to `index.html`.
+  - Set `GEMINI_API_KEY` and a strong `SESSION_SECRET` in Vercel Environment Variables. In serverless mode, SQLite automatically initializes in `/tmp/sahayakshg.db` (ephemeral demo persistence) unless `SQLITE_DB_PATH` or an external database is configured.
+- **Node / Cloud Run Deployment (`server.ts`)**:
+  - Ensure `NODE_ENV=production`, `GEMINI_API_KEY`, and a strong `SESSION_SECRET` are set in your host environment.
+  - Run `npm run build` to bundle the React client into `dist/`.
+  - Start the server with `npm start` (`node server.ts` on Node 22+ or `tsx server.ts`).
+  - Mount a persistent volume for `SQLITE_DB_PATH` or connect PostgreSQL via `DATABASE_URL` when scaling beyond the prototype.
